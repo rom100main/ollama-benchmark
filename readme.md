@@ -2,21 +2,21 @@
 
 ## Prerequisites
 
-[Ollama](https://ollama.com)
+[Ollama](https://ollama.com)  
 [Python](https://www.python.org)
 
 ## Installation
 
-Create a virtual environment and activate it
+Create a virtual environment
 ```bash
 python -m venv venv
 ```
 
+Activate the virtual environment
 on Linux/MacOS
 ```bash
 source venv\Scripts\activate
 ```
-
 on Windows
 ```cmd
 venv\Scripts\activate
