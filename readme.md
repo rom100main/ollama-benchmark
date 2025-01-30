@@ -7,22 +7,24 @@
 
 ## Installation
 
-Create a virtual environment
+### Create a virtual environment
 ```bash
 python -m venv venv
 ```
 
-Activate the virtual environment
+### Activate the virtual environment
+
 on Linux/MacOS
 ```bash
 source venv\Scripts\activate
 ```
+
 on Windows
 ```cmd
 venv\Scripts\activate
 ```
 
-Install the dependencies
+### Install the dependencies
 ```bash
 pip install -r requirements.txt
 ```
