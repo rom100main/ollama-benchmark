@@ -32,11 +32,11 @@ pip install -r requirements.txt
 ## Run
 
 ```bash
-python benchmark.py -m llama3.1:latest
+python speed.py -m llama3.1:latest
 ```
 
 ## Help
 
 ```bash
-python benchmark.py -h
+python speed.py -h
 ```
