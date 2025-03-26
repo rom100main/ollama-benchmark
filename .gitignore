@@ -1,4 +1,7 @@
 venv/
 env/
 
+images/
+data/
+
 .ropeproject/
