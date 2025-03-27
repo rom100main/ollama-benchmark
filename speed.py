@@ -1,18 +1,50 @@
 """
 Author: rom100main
 Website: http://rom100main.free.fr/
-Version: 1.0
+Version: 1.1
 """
 
 from typing import List
 import argparse
+from datetime import datetime
+import json
+import subprocess
+import os
+from pathlib import Path
+import platform
 import ollama
+
+def get_computer_info():
+    try:
+        ollama_version_output = subprocess.check_output(['ollama', '--version'], text=True).strip()
+        ollama_version = ollama_version_output.split(' ')[-1]
+    except:
+        ollama_version = "unknown"
+        
+    return {
+        "computer_name": platform.node(),
+        "processor": platform.processor(),
+        "machine": platform.machine(),
+        "cpu_count": os.cpu_count(),
+        "platform": platform.platform(),
+        "python_version": platform.python_version(),
+        "ollama_version": ollama_version
+    }
 
 def benchmark_inference_speed(
     models: List[str],
     prompt: str,
     num_runs: int = 1
 ):
+    computer_info = get_computer_info()
+    computer_name = computer_info["computer_name"]
+    data_folder = os.path.join('data', 'speed', computer_name)
+    os.makedirs(data_folder, exist_ok=True)
+    
+    info_file = os.path.join(data_folder, 'computer_info.json')
+    with open(info_file, 'w') as f:
+        json.dump(computer_info, f, indent=2)
+
     max_name_len = max(len(model) for model in models)
     progress_width = len(f"{num_runs}/{num_runs} runs")
 
@@ -32,6 +64,7 @@ def benchmark_inference_speed(
         total_tps = 0.0
         current_run = 0
         successful_runs = 0
+        run_results = []
 
         print(
             f"\r⏳ "
@@ -68,6 +101,13 @@ def benchmark_inference_speed(
                 total_tps += tps
                 successful_runs += 1
 
+                run_results.append({
+                    'run': current_run,
+                    'tokens_per_second': tps,
+                    'eval_count': eval_count,
+                    'eval_duration': eval_duration
+                })
+
                 avg_tps = total_tps / successful_runs
 
                 print(
@@ -79,7 +119,27 @@ def benchmark_inference_speed(
                 )
 
             except Exception as e:
+                run_results.append({
+                    'run': current_run,
+                    'error': str(e)
+                })
                 continue
+
+        total_eval_count = sum(run['eval_count'] for run in run_results if 'eval_count' in run)
+        result = {
+            'timestamp': datetime.now().isoformat(),
+            'model': model,
+            'prompt': prompt,
+            'total_runs': num_runs,
+            'successful_runs': successful_runs,
+            'average_tokens_per_second': total_tps / successful_runs if successful_runs > 0 else 0,
+            'total_eval_count': total_eval_count,
+            'runs': run_results
+        }
+
+        output_file = os.path.join(data_folder, f"{model.replace("/", "-")}.json")
+        with open(output_file, 'w') as f:
+            json.dump(result, f, indent=2)
 
         if successful_runs == 0:
             print(
@@ -96,7 +156,8 @@ def benchmark_inference_speed(
             f"\r✅ "
             f"| {model.ljust(max_name_len)} "
             f"| {f"{successful_runs}/{num_runs} runs".ljust(progress_width)} "
-            f"| Average: {avg_tps:.2f} tokens/sec",
+            f"| {f"Average: {avg_tps:.2f} tokens/sec"} ".ljust(len("Average: 999.99 tokens/sec")),
+            f"| Total tokens: {total_eval_count}",
             flush=True
         )
 
